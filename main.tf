@@ -1,5 +1,5 @@
 variable "aws_conf" {
-  type = "map"
+  type    = "map"
   default = {}
 }
 
@@ -8,17 +8,17 @@ data "aws_region" "region" {
 }
 
 resource "aws_vpc" "default" {
-  cidr_block = "${var.aws_conf["cidr_block"]}"
+  cidr_block           = "${var.aws_conf["cidr_block"]}"
   enable_dns_hostnames = true
 
   tags {
-    Name = "${var.aws_conf["domain"]} VPC"
+    Name  = "${var.aws_conf["domain"]} VPC"
     Stack = "${var.aws_conf["domain"]}"
   }
 
   lifecycle {
     create_before_destroy = true
-    prevent_destroy = true
+    prevent_destroy       = true
   }
 }
 
@@ -30,39 +30,44 @@ resource "aws_internet_gateway" "default" {
   vpc_id = "${aws_vpc.default.id}"
 
   tags {
-    Name = "${var.aws_conf["domain"]} VPC Gateway"
+    Name  = "${var.aws_conf["domain"]} VPC Gateway"
     Stack = "${var.aws_conf["domain"]}"
   }
+
   depends_on = ["aws_vpc.default"]
+
   lifecycle {
     create_before_destroy = true
-    prevent_destroy = true
+    prevent_destroy       = true
   }
 }
 
 resource "aws_vpc_dhcp_options" "search" {
-  domain_name = "${var.aws_conf["domain"]}"
+  domain_name         = "${var.aws_conf["domain"]}"
   domain_name_servers = ["AmazonProvidedDNS"]
 
   tags {
-    Name = "${var.aws_conf["domain"]} DHCP"
+    Name  = "${var.aws_conf["domain"]} DHCP"
     Stack = "${var.aws_conf["domain"]}"
   }
+
   depends_on = ["aws_subnet.public", "aws_subnet.private"]
+
   lifecycle {
     create_before_destroy = true
-    prevent_destroy = true
+    prevent_destroy       = true
   }
 }
 
 resource "aws_vpc_dhcp_options_association" "search" {
-  vpc_id = "${aws_vpc.default.id}"
+  vpc_id          = "${aws_vpc.default.id}"
   dhcp_options_id = "${aws_vpc_dhcp_options.search.id}"
 
   depends_on = ["aws_subnet.public", "aws_subnet.private"]
+
   lifecycle {
     create_before_destroy = true
-    prevent_destroy = true
+    prevent_destroy       = true
   }
 }
 
@@ -70,41 +75,45 @@ resource "aws_vpn_gateway" "vpn_gw" {
   vpc_id = "${aws_vpc.default.id}"
 
   tags {
-    Name = "${var.aws_conf["domain"]} VPN Gateway"
+    Name  = "${var.aws_conf["domain"]} VPN Gateway"
     Stack = "${var.aws_conf["domain"]}"
   }
+
   depends_on = ["aws_vpc.default"]
+
   lifecycle {
     create_before_destroy = true
-    prevent_destroy = true
+    prevent_destroy       = true
   }
 }
 
 resource "aws_security_group" "base-sg" {
-  name = "${var.aws_conf["domain"]}-base-sg"
+  name        = "${var.aws_conf["domain"]}-base-sg"
   description = "Allow outgoing traffic"
 
   vpc_id = "${aws_vpc.default.id}"
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = ["${var.aws_conf["cidr_block"]}"]
   }
 
   tags {
-    Name = "${var.aws_conf["domain"]} default SG"
+    Name  = "${var.aws_conf["domain"]} default SG"
     Stack = "${var.aws_conf["domain"]}"
   }
+
   depends_on = ["aws_vpc.default"]
+
   lifecycle {
     create_before_destroy = true
   }
