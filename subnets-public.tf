@@ -2,9 +2,10 @@ resource "aws_subnet" "public" {
   count  = "${length(data.aws_availability_zones.vpc_az.names)}"
   vpc_id = "${aws_vpc.default.id}"
 
-  cidr_block              = "${cidrsubnet(var.aws_conf["cidr_block"], 4, count.index + 1)}"
-  availability_zone       = "${element(data.aws_availability_zones.vpc_az.names, count.index)}"
-  map_public_ip_on_launch = true
+  availability_zone               = "${element(data.aws_availability_zones.vpc_az.names, count.index)}"
+  cidr_block                      = "${cidrsubnet(var.aws_conf["cidr_block"], 4, count.index + 1)}"
+  map_public_ip_on_launch         = true
+  assign_ipv6_address_on_creation = true
 
   tags {
     Name             = "${var.aws_conf["domain"]} Public Subnet ${element(data.aws_availability_zones.vpc_az.names, count.index)}"
@@ -27,6 +28,11 @@ resource "aws_route_table" "public" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.default.id}"
+  }
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = "${aws_egress_only_internet_gateway.ipv6-gw.id}"
   }
 
   tags {
