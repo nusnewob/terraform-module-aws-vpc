@@ -3,6 +3,7 @@ resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.default.id}"
 
   availability_zone               = "${element(data.aws_availability_zones.vpc_az.names, count.index)}"
+  ipv6_cidr_block                 = "${cidrsubnet(aws_vpc.default.ipv6_cidr_block, 8, count.index + 1)}"
   cidr_block                      = "${cidrsubnet(var.aws_conf["cidr_block"], 4, count.index + 1)}"
   map_public_ip_on_launch         = true
   assign_ipv6_address_on_creation = true
